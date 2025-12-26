@@ -20,6 +20,31 @@ A local AI coding agent powered by Google's Gemini API. Built in Go with safety-
 
 ## Installation
 
+### Fedora (Linux)
+
+```bash
+sudo dnf install golang
+git clone https://github.com/brandnova/nova-horizon-cli.git
+cd nova-horizon-cli
+go build -o nova-horizon .
+```
+
+### Windows
+
+1. Install Go from https://golang.org/dl/
+2. Open PowerShell or Command Prompt
+3. Clone the repository:
+   ```powershell
+   git clone https://github.com/brandnova/nova-horizon-cli.git
+   cd nova-horizon-cli
+   ```
+4. Build:
+   ```powershell
+   go build -o nova-horizon.exe .
+   ```
+
+### macOS / Ubuntu (using Make)
+
 ### 1. Clone and Build
 
 ```bash
@@ -201,6 +226,7 @@ nova-horizon --max-steps 15 "Your prompt"
 ### "Model not found"
 
 Verify your model string is correct. Default is `gemini-2.5-flash`. Other options:
+
 - `gemini-1.5-flash`
 - `gemini-1.5-pro`
 - `gemini-2.0-flash-exp`

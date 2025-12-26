@@ -3,12 +3,11 @@ package agent
 import (
 	"context"
 	"fmt"
-	"strings"
 
+	"github.com/brandnova/nova-horizon-cli/internal/gemini"
+	"github.com/brandnova/nova-horizon-cli/internal/tools"
 	"github.com/fatih/color"
-	"github.com/google/generative-ai-go/types"
-	"github.com/yourusername/nova-horizon/internal/gemini"
-	"github.com/yourusername/nova-horizon/internal/tools"
+	"github.com/google/generative-ai-go/genai"
 )
 
 type Config struct {
@@ -46,7 +45,16 @@ func (a *Agent) Run(prompt string) error {
 	defer a.client.Close()
 
 	ctx := context.Background()
-	messages := []interface{}{prompt}
+
+	// Initialize messages with user prompt
+	messages := []*genai.Content{
+		{
+			Role: "user",
+			Parts: []genai.Part{
+				genai.Text(prompt),
+			},
+		},
+	}
 
 	for step := 0; step < a.config.MaxSteps; step++ {
 		if a.config.Verbose {
@@ -76,8 +84,10 @@ func (a *Agent) Run(prompt string) error {
 
 		// Check for function calls
 		hasFunctionCall := false
+		var functionResponses []genai.Part
+
 		for _, part := range candidate.Content.Parts {
-			if fc, ok := part.(*types.FunctionCall); ok {
+			if fc, ok := part.(genai.FunctionCall); ok {
 				hasFunctionCall = true
 
 				// Check for loops
@@ -101,24 +111,27 @@ func (a *Agent) Run(prompt string) error {
 					fmt.Printf(" - Calling function: %s\n", fc.Name)
 				}
 
-				// Add result to messages
-				messages = append(messages, &types.Content{
-					Role: "tool",
-					Parts: []types.Part{
-						{
-							FunctionResponse: &types.FunctionResponse{
-								Name:     fc.Name,
-								Response: map[string]interface{}{"result": result},
-							},
-						},
-					},
+				// Add response part
+				functionResponses = append(functionResponses, genai.FunctionResponse{
+					Name:     fc.Name,
+					Response: map[string]interface{}{"result": result},
 				})
-			} else if text, ok := part.(*types.Text); ok {
+			} else if text, ok := part.(genai.Text); ok {
 				// Final response
-				if text.String() != "" {
-					fmt.Println(text.String())
+				if string(text) != "" {
+					fmt.Println(string(text))
 				}
 			}
+		}
+
+		// If we have function responses, add them to history
+		if len(functionResponses) > 0 {
+			messages = append(messages, &genai.Content{
+				Role: "function", // genai uses 'function' role for tool outputs? Or 'tool'?
+				// genai.Client usually expects 'function' or 'user' depending on API version but docs say 'function' for responses
+				// Wait, the SDK constants say RoleFunction = "function"
+				Parts: functionResponses,
+			})
 		}
 
 		// If no function calls, we're done
@@ -131,7 +144,7 @@ func (a *Agent) Run(prompt string) error {
 	return nil
 }
 
-func (a *Agent) executeFunction(fc *types.FunctionCall) (string, error) {
+func (a *Agent) executeFunction(fc genai.FunctionCall) (string, error) {
 	switch fc.Name {
 	case "get_files_info":
 		dir, _ := fc.Args["directory"].(string)

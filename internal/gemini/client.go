@@ -4,29 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/generative-ai-go/client"
-	"github.com/google/generative-ai-go/types"
+	"github.com/google/generative-ai-go/genai"
+	"google.golang.org/api/option"
 )
 
 type GeminiClient struct {
-	client *client.Client
+	client *genai.Client
 	model  string
 }
 
-type Message struct {
-	Role  string
-	Parts []interface{}
-}
-
-type FunctionCall struct {
-	Name string
-	Args map[string]interface{}
-}
-
 func NewGeminiClient(apiKey string, model string) (*GeminiClient, error) {
-	cl, err := client.NewClient(context.Background(), &client.ClientConfig{
-		APIKey: apiKey,
-	})
+	cl, err := genai.NewClient(context.Background(), option.WithAPIKey(apiKey))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Gemini client: %w", err)
 	}
@@ -37,29 +25,28 @@ func NewGeminiClient(apiKey string, model string) (*GeminiClient, error) {
 	}, nil
 }
 
-func (gc *GeminiClient) GenerateContent(ctx context.Context, messages []interface{}, tools []*types.Tool) (*types.GenerateContentResponse, error) {
-	content := &types.Content{
-		Role: "user",
-		Parts: []types.Part{
-			{Text: messages[len(messages)-1].(string)},
+func (gc *GeminiClient) GenerateContent(ctx context.Context, history []*genai.Content, tools []*genai.Tool) (*genai.GenerateContentResponse, error) {
+	model := gc.client.GenerativeModel(gc.model)
+	model.Tools = tools
+	model.SetTemperature(0) // Default to deterministic
+
+	model.SystemInstruction = &genai.Content{
+		Parts: []genai.Part{
+			genai.Text(systemPrompt),
 		},
 	}
 
-	config := &types.GenerateContentConfig{
-		Tools: tools,
-		SystemInstruction: &types.Content{
-			Parts: []types.Part{
-				{Text: systemPrompt},
-			},
-		},
+	cs := model.StartChat()
+
+	// Separate history and the last message (which is the new input)
+	if len(history) > 0 {
+		cs.History = history[:len(history)-1]
+		lastMsg := history[len(history)-1]
+		return cs.SendMessage(ctx, lastMsg.Parts...)
 	}
 
-	resp, err := gc.client.Models.GenerateContent(ctx, gc.model, []*types.Content{content}, config)
-	if err != nil {
-		return nil, fmt.Errorf("API call failed: %w", err)
-	}
-
-	return resp, nil
+	// Should not happen if agent loop provides prompt
+	return nil, fmt.Errorf("no messages provided")
 }
 
 const systemPrompt = `You are a helpful AI coding agent.

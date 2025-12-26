@@ -1,14 +1,14 @@
 package gemini
 
 import (
-	"github.com/google/generative-ai-go/types"
+	"github.com/google/generative-ai-go/genai"
 )
 
 // BuildTools creates tool definitions for the Gemini API
-func BuildTools() []*types.Tool {
-	return []*types.Tool{
+func BuildTools() []*genai.Tool {
+	return []*genai.Tool{
 		{
-			FunctionDeclarations: []*types.FunctionDeclaration{
+			FunctionDeclarations: []*genai.FunctionDeclaration{
 				getFilesInfoSchema(),
 				getFileContentSchema(),
 				writeFileSchema(),
@@ -18,15 +18,15 @@ func BuildTools() []*types.Tool {
 	}
 }
 
-func getFilesInfoSchema() *types.FunctionDeclaration {
-	return &types.FunctionDeclaration{
+func getFilesInfoSchema() *genai.FunctionDeclaration {
+	return &genai.FunctionDeclaration{
 		Name:        "get_files_info",
 		Description: "Lists files in a specified directory relative to the working directory, providing file size and directory status",
-		Parameters: &types.Schema{
-			Type: types.TypeObject,
-			Properties: map[string]*types.Schema{
+		Parameters: &genai.Schema{
+			Type: genai.TypeObject,
+			Properties: map[string]*genai.Schema{
 				"directory": {
-					Type:        types.TypeString,
+					Type:        genai.TypeString,
 					Description: "Directory path to list files from, relative to the working directory (default is the working directory itself)",
 				},
 			},
@@ -34,15 +34,15 @@ func getFilesInfoSchema() *types.FunctionDeclaration {
 	}
 }
 
-func getFileContentSchema() *types.FunctionDeclaration {
-	return &types.FunctionDeclaration{
+func getFileContentSchema() *genai.FunctionDeclaration {
+	return &genai.FunctionDeclaration{
 		Name:        "get_file_content",
 		Description: "Retrieves the content of a specified file relative to the working directory",
-		Parameters: &types.Schema{
-			Type: types.TypeObject,
-			Properties: map[string]*types.Schema{
+		Parameters: &genai.Schema{
+			Type: genai.TypeObject,
+			Properties: map[string]*genai.Schema{
 				"file_path": {
-					Type:        types.TypeString,
+					Type:        genai.TypeString,
 					Description: "Path of the file to read, relative to the working directory",
 				},
 			},
@@ -51,19 +51,19 @@ func getFileContentSchema() *types.FunctionDeclaration {
 	}
 }
 
-func writeFileSchema() *types.FunctionDeclaration {
-	return &types.FunctionDeclaration{
+func writeFileSchema() *genai.FunctionDeclaration {
+	return &genai.FunctionDeclaration{
 		Name:        "write_file",
 		Description: "Writes content to a specified file or creates a new file relative to the working directory. Creates directories if they do not exist.",
-		Parameters: &types.Schema{
-			Type: types.TypeObject,
-			Properties: map[string]*types.Schema{
+		Parameters: &genai.Schema{
+			Type: genai.TypeObject,
+			Properties: map[string]*genai.Schema{
 				"file_path": {
-					Type:        types.TypeString,
+					Type:        genai.TypeString,
 					Description: "Path of the file to write, relative to the working directory",
 				},
 				"content": {
-					Type:        types.TypeString,
+					Type:        genai.TypeString,
 					Description: "Content to write to the file as a string",
 				},
 			},
@@ -72,21 +72,21 @@ func writeFileSchema() *types.FunctionDeclaration {
 	}
 }
 
-func runFileSchema() *types.FunctionDeclaration {
-	return &types.FunctionDeclaration{
+func runFileSchema() *genai.FunctionDeclaration {
+	return &genai.FunctionDeclaration{
 		Name:        "run_file",
 		Description: "Executes a specified file relative to the working directory (.go, .py, .sh, .js, .ts supported), with optional CLI args",
-		Parameters: &types.Schema{
-			Type: types.TypeObject,
-			Properties: map[string]*types.Schema{
+		Parameters: &genai.Schema{
+			Type: genai.TypeObject,
+			Properties: map[string]*genai.Schema{
 				"file_path": {
-					Type:        types.TypeString,
+					Type:        genai.TypeString,
 					Description: "Path of the file to execute, relative to the working directory",
 				},
 				"args": {
-					Type: types.TypeArray,
-					Items: &types.Schema{
-						Type: types.TypeString,
+					Type: genai.TypeArray,
+					Items: &genai.Schema{
+						Type: genai.TypeString,
 					},
 					Description: "Optional array of string arguments to pass to the file",
 				},
