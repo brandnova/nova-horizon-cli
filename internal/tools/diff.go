@@ -2,9 +2,9 @@ package tools
 
 import (
 	"fmt"
-	"github.com/fatih/color"
-	"os"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 // GenerateDiff creates a unified diff between old and new content

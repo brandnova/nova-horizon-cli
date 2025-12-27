@@ -1,0 +1,30 @@
+# Binaries
+nova-horizon
+nova-hrzn
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (installed by `go mod vendor`)
+vendor/
+
+# OS Specific
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Config (don't commit secrets!)
+config.toml
+Multi languag support.md
